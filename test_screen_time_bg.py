@@ -53,6 +53,16 @@ class TestScreenTime(TestCase):
 		test.open = Mock(side_effect=FileNotFoundError)
 		self.assertRaises(SystemExit, test.get_target_processes)
 
+	def test_remove_duplicates(self):
+		test_list = [1, 2, 3, 4, 1, 1, 5, 2, 3, 4]
+		returned_list = test.remove_duplicates(test_list)
+		expected_result = [1, 2, 3, 4, 5]
+		self.assertEqual(expected_result, returned_list)
+		test_list = ['a', 'b', 'a', 'c', 'c', 'd', 'b']
+		returned_list = test.remove_duplicates(test_list)
+		expected_result = ['a', 'b', 'c', 'd']
+		self.assertEqual(expected_result, returned_list)
+
 	def test_get_target_processes(self):
 		self.with_valid_data()
 		self.with_invalid_data()
