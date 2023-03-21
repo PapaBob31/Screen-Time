@@ -36,6 +36,30 @@ class TestScreenTime(TestCase):
 		Monitor.processes_data = {"chrome.exe": [False, "0:00"], "firefox.exe": [False, "0:00"], "sublime_text.exe": [False, "0:00"]}
 		Monitor.target_processes = []
 
+	def test_handle_file_read(self):
+		test.open = Mock(return_value=StringIO('["chrome.exe", "firefox.exe", "sublime_text.exe"]'))
+		data = test.handle_file_read("any_data.json")
+		self.assertEqual(["chrome.exe", "firefox.exe", "sublime_text.exe"], data)
+
+		test.open = Mock(side_effect=FileNotFoundError)
+		data = test.handle_file_read("any_data.json")
+		self.assertEqual(None, data)
+
+		test.open = Mock(return_value=StringIO('["chrome.exe", "firefox.exe", "sublime_text.exe"'))
+		data = test.handle_file_read("any_data.json")
+		self.assertEqual(None, data)
+
+	def test_remove_duplicates(self):
+		test_list = [1, 2, 3, 4, 1, 1, 5, 2, 3, 4]
+		returned_list = test.remove_duplicates(test_list)
+		expected_result = [1, 2, 3, 4, 5]
+		self.assertEqual(expected_result, returned_list)
+		
+		test_list = ['a', 'b', 'a', 'c', 'c', 'd', 'b']
+		returned_list = test.remove_duplicates(test_list)
+		expected_result = ['a', 'b', 'c', 'd']
+		self.assertEqual(expected_result, returned_list)
+
 	def with_valid_data(self):
 		test.open = Mock(return_value=StringIO('["chrome.exe", "firefox.exe", "sublime_text.exe"]'))
 		Monitor.target_processes = test.get_target_processes()
@@ -43,6 +67,8 @@ class TestScreenTime(TestCase):
 
 	def with_invalid_data(self):
 		test.open = Mock(return_value=StringIO('["chrome.exe", "firefox.exe", "sublime_text.exe"'))
+		self.assertRaises(SystemExit, test.get_target_processes)
+		test.open = Mock(return_value=StringIO('""'))
 		self.assertRaises(SystemExit, test.get_target_processes)
 
 	def with_empty_data(self):
@@ -52,16 +78,6 @@ class TestScreenTime(TestCase):
 	def when_file_not_found(self):
 		test.open = Mock(side_effect=FileNotFoundError)
 		self.assertRaises(SystemExit, test.get_target_processes)
-
-	def test_remove_duplicates(self):
-		test_list = [1, 2, 3, 4, 1, 1, 5, 2, 3, 4]
-		returned_list = test.remove_duplicates(test_list)
-		expected_result = [1, 2, 3, 4, 5]
-		self.assertEqual(expected_result, returned_list)
-		test_list = ['a', 'b', 'a', 'c', 'c', 'd', 'b']
-		returned_list = test.remove_duplicates(test_list)
-		expected_result = ['a', 'b', 'c', 'd']
-		self.assertEqual(expected_result, returned_list)
 
 	def test_get_target_processes(self):
 		self.with_valid_data()

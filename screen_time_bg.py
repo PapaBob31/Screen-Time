@@ -1,19 +1,19 @@
-import subprocess, time, json, copy, sys
+import subprocess, time, json, sys
 from datetime import datetime, timedelta
 
 ONE_MINUTE = timedelta(minutes=1)
 
 def remove_duplicates(list_item):
 	"""Removes duplicate items from a list and returns a new list"""
-	unique_list = []
-	unique_list.append(list_item[0])
+	unique_list = [list_item[0]]
 	list_item.sort()
 	for i in range(1, len(list_item)):
 		if list_item[i] != list_item[i-1]:
 			unique_list.append(list_item[i])
 	return unique_list
 
-def handle_file_io(file_name):
+def handle_file_read(file_name):
+	"""Handles Reading of data from files"""
 	try:
 		with open(file_name) as file:
 			try:
@@ -26,7 +26,7 @@ def handle_file_io(file_name):
 
 def get_target_processes():
 	"""Gets the list of processes that are being monitored by the program from a json file"""
-	user_target_processes = handle_file_io("target_processes.json")
+	user_target_processes = handle_file_read("target_processes.json")
 
 	if type(user_target_processes) == list:
 		if not user_target_processes:
@@ -62,17 +62,17 @@ class Monitor:
 	current_date = str(datetime.now().date())
 	target_processes = get_target_processes() # List that stores the name of the process the program is monitoring
 
-	processes_data = {} # Stores data about each process in target_processes list e.g {"chrome.exe": [False, "0:00"], "firefox.exe": [False, "0:00"]}
-	# First item in each list stores if the process is running or not and the second item stores how long it has run since the program started monitoring it.
+	processes_data = {} # Stores the processes' data for the current date. Just a variable for shorter lines of code
 
-	screen_time_data = {} # Stores a date and processes_data variable content as a key-value pair as shown below
-	# {"2022-10-21": {"chrome.exe": [false, "0:00"], "firefox.exe": [false, "0:30"]}}
+	screen_time_data = {} # Stores a date and a dictionary containing processes' data as a key-value pair as shown below
+	# {"2022-10-21": {"chrome.exe": [false, "0:00"], "firefox.exe": [false, "0:30"]}}.
 
 	@staticmethod
 	def create_entries_for_target_processes():
 		"""Adds data of the processes being monitored for the current date in Monitor.screen_time_data"""
 		processes_data = {}
 		for process in Monitor.target_processes:
+			# first item indicates if the process is currently running or not. Second is how long it has run after being monitored
 			processes_data[process] = [False, "0:00"]
 		Monitor.screen_time_data[Monitor.current_date] = processes_data
 		Monitor.processes_data = Monitor.screen_time_data[Monitor.current_date]
@@ -98,7 +98,7 @@ class Monitor:
 	@staticmethod
 	def get_processes_data():
 		"""Gets the screen time data for the target processes from a json file."""
-		Monitor.screen_time_data = handle_file_io("screen_time_data.json")
+		Monitor.screen_time_data = handle_file_read("screen_time_data.json")
 
 		if type(Monitor.screen_time_data) == dict:
 			if Monitor.screen_time_data.get(Monitor.current_date):
